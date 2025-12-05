@@ -1,0 +1,952 @@
+openapi: 3.0.4
+
+info:
+  title: "Foodstuffs' Pak 'n Save & New World Android App API"
+  description: "This API is not officially supported by Foodstuffs Ltd. It has been created by reverse engineering the Foodstuffs Pak 'n Save & New World Android App. Use at your own risk."
+  version: "4.32.0"
+
+servers:
+  - url: "https://api-prod.prod.fsniwaikato.kiwi/prod"
+  - url: "https://api-preprod.test.fsniwaikato.kiwi"
+  - url: "https://api-qa.test.fsniwaikato.kiwi"
+
+paths:
+  /mobile/user/login/guest:
+    post:
+      summary: "Fetches access_token for guest user"
+      description: "Requires no authentication. Used to get an access_token for guest users, along with a refresh_token."
+      operationId: "loginGuestUser"
+      tags:
+        - Authentication.
+      requestBody:
+        required: false
+        description: "If this is omitted, a Token for New World will be returned instead. If you use an invalid value, the `banner` value in the Token will be what you specified."
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                banner:
+                  type: string
+                  enum:
+                    - PNS
+                    - MNW
+      responses:
+        "200":
+          description: "Successful authentication."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  token_type:
+                    type: string
+                  refresh_token:
+                    type: string
+                  expires_in:
+                    type: integer
+                  scope:
+                    type: string
+                required:
+                  - access_token
+                  - token_type
+                  - refresh_token
+                  - expires_in
+                  - scope
+
+  /mobile/v1/users/login/refreshtoken:
+    "post":
+      summary: "Refreshes an access_token using a refresh_token"
+      description: "Requires no authentication. Used to refresh an expiring access_token using a valid refresh_token."
+      operationId: "refreshAccessToken"
+      tags:
+        - Authentication.
+      parameters:
+        - name: User-Agent
+          in: header
+          required: true
+          schema:
+            type: string
+          description: "Must be set to `PAKnSAVEApp/4.32.0 (App Version)`."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        "200":
+          description: "Successful token refresh."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                  refreshToken:
+                    type: string
+                required:
+                  - accessToken
+                  - refreshToken
+        "401":
+          description: "Unauthorized - Invalid or expired refresh_token."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  fields:
+                    type: object
+                    nullable: true
+                  status:
+                    type: integer
+                    example: 401
+                  message:
+                    type: string
+                    example: "Refresh token expired or invalid"
+                  code:
+                    type: string
+                    example: "NOT_SUPPORTED"
+
+  /mobile/v1/upgrade:
+    post:
+      summary: "Checks for app upgrade availability"
+      description: "Returns information about whether a newer version of the app is available."
+      operationId: "checkAppUpgrade"
+      tags:
+        - Misc
+      requestBody:
+        description: Version and Banner from the current App.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                version:
+                  type: string
+                banner:
+                  type: string
+      responses:
+        "200":
+          description: It will tell you if your app version is to low to continue using the app.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  latest:
+                    type: string
+                  action:
+                    type: string
+                  message:
+                    type: string
+
+  /mobile/v1/error:
+    get:
+      summary: "Fetches error titles and their descriptions"
+      description: "Returns a list of error titles used by the App along with their descriptions."
+      operationId: "getErrorCodes"
+      tags:
+        - Misc
+      responses:
+        "200":
+          description: "Successful retrieval of error codes."
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+                  properties:
+                    title:
+                      type: string
+                    text:
+                      type: string
+                  required:
+                    - title
+                    - text
+
+  /mobile//store/physical:
+    get:
+      summary: "Fetches physical store information"
+      description: "Returns a list of physical stores with their details such as name, address, and opening hours."
+      operationId: "getPhysicalStores"
+      tags:
+        - Store
+      parameters:
+        - name: access_token
+          in: header
+          required: true
+          schema:
+            type: string
+          description: "Requires either a guest user token obtained via `loginGuestUser` or an authenticated user’s access token.."
+      responses:
+        "200":
+          description: A JSON array of all Stores for the `banner` in your `access_token`.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    name:
+                      type: string
+                    banner:
+                      type: string
+                    address:
+                      type: string
+                    clickAndCollect:
+                      type: boolean
+                    delivery:
+                      type: boolean
+                    latitude:
+                      type: number
+                      format: float
+                    longitude:
+                      type: number
+                      format: float
+                    openingHours:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          day:
+                            type: string
+                          dayShort:
+                            type: string
+                          open:
+                            type: string
+                          close:
+                            type: string
+                    phone:
+                      type: string
+                    localPhone:
+                      type: string
+                    linkDetails:
+                      type: object
+                      properties:
+                        liquorLicenseUrl:
+                          type: string
+                          format: uri
+                    physicalStoreCode:
+                      type: string
+                    region:
+                      type: string
+                    salesOrgId:
+                      type: string
+                    onboardingMode:
+                      type: boolean
+                    defaultCollectType:
+                      type: string
+                      enum: [CONCIERGE, COUNTER, LOCKER]
+                    expressTimeslots:
+                      type: boolean
+                    expressProductLimit:
+                      type: integer
+                    onlineActive:
+                      type: boolean
+                    physicalActive:
+                      type: boolean
+                    servicesAndFacilities:
+                      type: array
+                      items:
+                        type: string
+                    physicalAddress:
+                      type: object
+                      properties:
+                        streetName:
+                          type: string
+                        houseID:
+                          type: string
+                        cityName:
+                          type: string
+                        additionalCityName:
+                          type: string
+                        regionName:
+                          type: string
+                        districtName:
+                          type: string
+                        postalCode:
+                          type: string
+                        countryCode:
+                          type: string
+                        countryName:
+                          type: string
+                    deliverySubscriptionProperties:
+                      type: object
+                      properties:
+                        available:
+                          type: boolean
+                    minimumOrderAmountInCents:
+                      type: integer
+        "401":
+          description: "Unauthorized - Invalid or missing access token."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+                required:
+                  - error
+                  - error_description
+
+  /mobile/cart:
+    get:
+      summary: "Fetches the current user's shopping cart"
+      description: "Returns the shopping cart details for the authenticated user, it also indicates if items are unavailable at the store associated with the `authorization` Token."
+      operationId: "getShoppingCart"
+      tags:
+        - Cart
+      parameters:
+        - name: authorization
+          description: "Bearer {access_token} - Requires an authenticated user's access token."
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Successful retrieval of the shopping cart."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  store:
+                    type: object
+                    properties:
+                      storeAddress:
+                        type: string
+                      storeName:
+                        type: string
+                      storeId:
+                        type: string
+                        format: uuid
+                      storeRegion:
+                        type: string
+                  products:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        productId:
+                          type: string
+                        quantity:
+                          type: integer
+                        sale_type:
+                          type: string
+                        price:
+                          type: integer
+                        name:
+                          type: string
+                        brand:
+                          type: string
+                        originStatement:
+                          type: string
+                        isCatered:
+                          type: boolean
+                        isTobacco:
+                          type: boolean
+                        isLiquor:
+                          type: boolean
+                  unavailableProducts:
+                    type: array
+                    items:
+                      type: object
+                  subtotal:
+                    type: integer
+                  serviceFee:
+                    type: integer
+                  bagFee:
+                    type: integer
+                  bagless:
+                    type: boolean
+                  promoCodeDiscount:
+                    type: integer
+                  deliveryPassDiscount:
+                    type: integer
+                  paymentDetails:
+                    type: object
+                  whenLastPriced:
+                    type: string
+                    format: date-time
+                  clubMember:
+                    type: boolean
+
+  /mobile/ecomm-products/{banner}/{storeId}/specials?sortOrder={sortOrder}:
+    post:
+      summary: "Fetches Products that are on sale for a specific store"
+      description: "Returns a list of product specials available at the specified store."
+      operationId: "getStoreDeals"
+      tags:
+        - Store
+      parameters:
+        - name: banner
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: sortOrder
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: authorization
+          required: true
+          in: header
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  title:
+                    type: string
+                  items:
+                    type: array
+                    items:
+                      type: string
+      responses:
+        "200":
+          description: If you have specified a filter in the request body this list will only have those items.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tobaccoFiltered:
+                    type: boolean
+                  totalHits:
+                    type: integer
+                  hitsPerPage:
+                    type: integer
+                  numberOfPages:
+                    type: integer
+                  page:
+                    type: integer
+                  products:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        productId:
+                          type: string
+                        brand:
+                          type: string
+                        name:
+                          type: string
+                        units:
+                          type: string
+                        categories:
+                          type: array
+                          items:
+                            type: string
+                        price:
+                          type: integer
+                        unitPrice:
+                          type: string
+                        productImageUrls:
+                          type: object
+                          properties:
+                            "100":
+                              type: string
+                              format: uri
+                            "200":
+                              type: string
+                              format: uri
+                            "400":
+                              type: string
+                              format: uri
+                            "500":
+                              type: string
+                              format: uri
+                          required: ["100", "200", "400", "500"]
+                        decalCode:
+                          type: string
+                        decalImageUrl:
+                          type: string
+                          format: uri
+                        availableInStore:
+                          type: boolean
+                        availableInOnline:
+                          type: boolean
+                        tobaccoFlag:
+                          type: boolean
+                        liquorFlag:
+                          type: boolean
+                        saleType:
+                          type: string
+                        algoliaAnalytics:
+                          type: object
+                          properties:
+                            searchQueryID:
+                              type: string
+                            searchPosition:
+                              type: integer
+                          required: ["searchQueryID", "searchPosition"]
+                        boughtBefore:
+                          type: boolean
+                        badgeSmallUrl:
+                          type: string
+                          format: uri
+                          nullable: true
+                        badgeMediumUrl:
+                          type: string
+                          format: uri
+                          nullable: true
+                        badgeLargeUrl:
+                          type: string
+                          format: uri
+                          nullable: true
+                      required:
+                        - productId
+                        - brand
+                        - name
+                        - units
+                        - categories
+                        - price
+                        - unitPrice
+                        - productImageUrls
+                        - decalCode
+                        - decalImageUrl
+                        - availableInStore
+                        - availableInOnline
+                        - tobaccoFlag
+                        - liquorFlag
+                        - saleType
+                        - algoliaAnalytics
+                        - boughtBefore
+                  filters:
+                    type: object
+                    properties:
+                      Deals:
+                        type: object
+                        additionalProperties: false
+                      "Dietary & lifestyle":
+                        type: object
+                        additionalProperties:
+                          type: integer
+                      Categories:
+                        type: object
+                        additionalProperties:
+                          type: integer
+                      Brands:
+                        type: object
+                        additionalProperties:
+                          type: integer
+                    required:
+                      - Deals
+                      - "Dietary & lifestyle"
+                      - Categories
+                      - Brands
+                required:
+                  - tobaccoFiltered
+                  - totalHits
+                  - hitsPerPage
+                  - numberOfPages
+                  - page
+                  - products
+                  - filters
+
+  /mobile/v1/products/category?storeId={storeId}&banner={banner}&region={region}:
+    "get":
+      summary: "Fetches product categories for a specific store"
+      description: "Returns a list of product categories available at the specified store, and their nested order."
+      operationId: "getProductCategories"
+      tags:
+        - Store
+      parameters:
+        - name: storeId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: banner
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: region
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: A list of grocery categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    code:
+                      type: string
+                      nullable: true
+                    appContent:
+                      type: object
+                      nullable: true
+                      properties:
+                        panel:
+                          type: object
+                          properties:
+                            title: { type: string }
+                            imageUrl: { type: string }
+                            subTitle: { type: string }
+                        product:
+                          type: object
+                          properties:
+                            title: { type: string }
+                            subTitle: { type: string }
+                            campaignUrl: { type: string }
+                            badgeLargeUrl: { type: string }
+                            badgeSmallUrl: { type: string }
+                            badgeMediumUrl: { type: string }
+                    children:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                          code:
+                            type: string
+                            nullable: true
+                          appContent:
+                            type: object
+                            nullable: true
+                            properties:
+                              panel:
+                                type: object
+                                properties:
+                                  title: { type: string }
+                                  imageUrl: { type: string }
+                                  subTitle: { type: string }
+                              product:
+                                type: object
+                                properties:
+                                  title: { type: string }
+                                  subTitle: { type: string }
+                                  campaignUrl: { type: string }
+                                  badgeLargeUrl: { type: string }
+                                  badgeSmallUrl: { type: string }
+                                  badgeMediumUrl: { type: string }
+                          children:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                name:
+                                  type: string
+                                code:
+                                  type: string
+                                  nullable: true
+
+  /mobile/ecomm-products/{banner}/{storeId}/category?cat0={cat0Name}&cat1={cat1Name}&cat2={cat2Name}&sortOrder={sortOrder}:
+    "get":
+      summary: "Fetches Products for a specific category in a specific store"
+      description: "Returns a list of products available in the specified categories at the specified store, you can use any combination of `cat`, if they have products it will return them."
+      operationId: "getProductsByCategory"
+      tags:
+        - Store
+      parameters:
+        - name: banner
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: cat0Name
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: cat1Name
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: cat2Name
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: sortOrder
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: authorization
+          required: true
+          in: header
+          schema:
+            type: string
+            format: bearer
+      responses:
+        "200":
+          description: A list of grocery categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    code:
+                      type: string
+                      nullable: true
+                    appContent:
+                      type: object
+                      nullable: true
+                      properties:
+                        panel:
+                          type: object
+                          properties:
+                            title: { type: string }
+                            imageUrl: { type: string }
+                            subTitle: { type: string }
+                        product:
+                          type: object
+                          properties:
+                            title: { type: string }
+                            subTitle: { type: string }
+                            campaignUrl: { type: string }
+                            badgeLargeUrl: { type: string }
+                            badgeSmallUrl: { type: string }
+                            badgeMediumUrl: { type: string }
+                    children:
+                      type: array
+                      description: >
+                        Nested categories. Each child follows the same structure
+                        as the parent (name, optional code, optional appContent,
+                        and its own children).
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                          code:
+                            type: string
+                            nullable: true
+                          appContent:
+                            type: object
+                            nullable: true
+                          children:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                name:
+                                  type: string
+                                code:
+                                  type: string
+                                  nullable: true
+
+  #TODO: Purchase and what's returned
+  /mobile/previousPurchases:
+    "get":
+      summary: "Fetches the user's previous purchases"
+      description: "Returns a list of previous purchases made by the authenticated user. If you're a guest, this list would be assumed to be empty."
+      operationId: "getPreviousPurchases"
+      tags:
+        - "Cart"
+      parameters:
+        - "name": "authorization"
+          "description": "Bearer {access_token} - Requires an authenticated user's access token."
+          "in": "header"
+          "required": true
+          "schema":
+            "type": "string"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                excludeCart:
+                  type: boolean
+                  description: Exclude cart details from the response
+                maximumResults:
+                  type: integer
+                  description: Maximum number of results to return
+                source:
+                  type: string
+                  enum: [ALL, SPECIALS, CATEGORY]
+                  description: Source of products to fetch
+              required:
+                - excludeCart
+                - maximumResults
+                - source
+      responses:
+        "200":
+          description: "Successful retrieval of previous purchases."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  products:
+                    type: array
+                required:
+                  - products
+
+  /mobile/ecomm-products/{banner}/{storeId}/search?q={searchItem}&tobacco={searchingTobacco}&sortOrder={sortOrder}}&disableAdsOverride{disableAdsOverride}:
+    "post":
+      summary: "Searches for Products in a specific store"
+      description: "Returns a list of products matching the search query at the specified store."
+      operationId: "searchProductsInStore"
+      tags:
+        - Store
+      parameters:
+        - name: banner
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: searchItem
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: searchingTobacco
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: sortOrder
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: disableAdsOverride
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: authorization
+          required: true
+          in: header
+          schema:
+            type: string
+            format: bearer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+            example: []
+      responses:
+        "200":
+          description: A paginated list of products
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tobaccoFiltered:
+                    type: boolean
+                  totalHits:
+                    type: integer
+                  hitsPerPage:
+                    type: integer
+                  numberOfPages:
+                    type: integer
+                  page:
+                    type: integer
+                  products:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        productId:
+                          type: string
+                        brand:
+                          type: string
+                        name:
+                          type: string
+                        units:
+                          type: string
+                        categories:
+                          type: array
+                          items:
+                            type: string
+                        price:
+                          type: integer
+                        unitPrice:
+                          type: string
+                        productImageUrls:
+                          type: object
+                          properties:
+                            "100": { type: string, format: uri }
+                            "200": { type: string, format: uri }
+                            "400": { type: string, format: uri }
+                            "500": { type: string, format: uri }
+                        availableInStore:
+                          type: boolean
+                        availableInOnline:
+                          type: boolean
+                        tobaccoFlag:
+                          type: boolean
+                        liquorFlag:
+                          type: boolean
+                        saleType:
+                          type: string
+                        algoliaAnalytics:
+                          type: object
+                          properties:
+                            searchQueryID: { type: string }
+                            searchPosition: { type: integer }
+                        boughtBefore:
+                          type: boolean
+                required:
+                  - tobaccoFiltered
+                  - totalHits
+                  - hitsPerPage
+                  - numberOfPages
+                  - page
+                  - products
