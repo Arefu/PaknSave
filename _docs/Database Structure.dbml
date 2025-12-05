@@ -1,0 +1,43 @@
+Table users {
+  id integer [primary key, auto_increment]
+  user varchar
+  created_at timestamp
+}
+
+Table groups {
+    id integer [primary key, auto_increment]
+    name varchar
+    created_at timestamp
+}
+
+Table user_groups {
+    user_id integer [ref: > users.id]
+    group_id integer [ref: > groups.id]
+    assigned_at timestamp
+
+}
+
+Table shopping_lists {
+    id integer [primary key, auto_increment]
+    user_id integer [ref: > users.id]
+    name varchar
+    created_at timestamp
+}
+
+Table shopping_list_items {
+    id integer [primary key, auto_increment]
+    shopping_list_id integer [ref: > shopping_lists.id]
+    owner_id integer [ref: > users.id]
+    added_by_user_id  integer [ref: > users.id] 
+    item_id integer
+    item_banner varchar
+    quantity integer
+    added_at timestamp
+}
+
+Table shopping_list_shared_with {
+    shopping_list_id integer  [ref: > shopping_lists.id]
+    user_id         integer   [ref: >  users.id]
+    shared_at          timestamp
+
+}
