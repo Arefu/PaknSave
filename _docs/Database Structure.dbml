@@ -1,6 +1,7 @@
 Table users {
   id integer [primary key, auto_increment]
   user varchar
+  preferred_store varchar //guid
   created_at timestamp
 }
 
@@ -39,5 +40,5 @@ Table shopping_list_shared_with {
     shopping_list_id integer  [ref: > shopping_lists.id]
     user_id         integer   [ref: >  users.id]
     shared_at          timestamp
-
 }
+
