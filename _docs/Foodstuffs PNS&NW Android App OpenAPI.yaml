@@ -9,6 +9,9 @@ servers:
   - url: "https://api-prod.prod.fsniwaikato.kiwi/prod"
   - url: "https://api-preprod.test.fsniwaikato.kiwi"
   - url: "https://api-qa.test.fsniwaikato.kiwi"
+  - url: "https://api-prod.foursquare.co.nz/"
+  - url: "https://api-preprod.foursquare.co.nz/"
+  - url: "https://api-qa.foursquare.co.nz/"
 
 paths:
   /mobile/user/login/guest:
@@ -387,7 +390,7 @@ paths:
                   clubMember:
                     type: boolean
 
-  /mobile/ecomm-products/{banner}/{storeId}/specials?sortOrder={sortOrder}:
+  /mobile/ecomm-products/{banner}/{storeId}/specials:
     post:
       summary: "Fetches Products that are on sale for a specific store"
       description: "Returns a list of product specials available at the specified store."
@@ -573,7 +576,7 @@ paths:
                   - products
                   - filters
 
-  /mobile/v1/products/category?storeId={storeId}&banner={banner}&region={region}:
+  /mobile/v1/products/category:
     "get":
       summary: "Fetches product categories for a specific store"
       description: "Returns a list of product categories available at the specified store, and their nested order."
@@ -671,7 +674,7 @@ paths:
                                   type: string
                                   nullable: true
 
-  /mobile/ecomm-products/{banner}/{storeId}/category?cat0={cat0Name}&cat1={cat1Name}&cat2={cat2Name}&sortOrder={sortOrder}:
+  /mobile/ecomm-products/{banner}/{storeId}/category:
     "get":
       summary: "Fetches Products for a specific category in a specific store"
       description: "Returns a list of products available in the specified categories at the specified store, you can use any combination of `cat`, if they have products it will return them."
@@ -824,10 +827,12 @@ paths:
                 properties:
                   products:
                     type: array
+                    items:
+                      type: object
                 required:
                   - products
 
-  /mobile/ecomm-products/{banner}/{storeId}/search?q={searchItem}&tobacco={searchingTobacco}&sortOrder={sortOrder}}&disableAdsOverride{disableAdsOverride}:
+  /mobile/ecomm-products/{banner}/{storeId}/search:
     "post":
       summary: "Searches for Products in a specific store"
       description: "Returns a list of products matching the search query at the specified store."
